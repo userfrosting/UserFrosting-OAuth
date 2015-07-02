@@ -101,7 +101,8 @@ class OAuthControllerLinkedIn extends OAuthController {
         ]);
 
         // We got an access token, so return the user's details
-        return $this->_provider->getUserDetails($token);
+        $_SESSION['userfrosting']['oauth_details']=$this->_provider->getUserDetails($token);
+        return $_SESSION['userfrosting']['oauth_details'];
     }
     
     // Transform raw details from the provider's API into the format necessary for our database
