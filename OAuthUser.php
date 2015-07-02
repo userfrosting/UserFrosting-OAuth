@@ -29,7 +29,7 @@ class OAuthUser extends \UserFrosting\MySqlDatabaseObject {
     }
     
     public static function getColumnsAuthUser(){
-        return static::$_columns;
+        return static::$columns_user_auth;
     }
     
 /**
