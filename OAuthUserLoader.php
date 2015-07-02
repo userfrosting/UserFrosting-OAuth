@@ -8,8 +8,8 @@ class OAuthUserLoader extends \UserFrosting\MySqlObjectLoader {
        
     public static function init(){
         // Set table and columns for this class.
-        static::$_table = OAuthUser::getTableAuthUser();
-        static::$_columns = OAuthUser::getColumnsAuthUser();
+        $this->_table = OAuthUser::getTableAuthUser();
+        $this->_columns = OAuthUser::getColumnsAuthUser();
 //        static::$_columns = static::$columns_user_auth;
     }       
 
