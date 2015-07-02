@@ -19,7 +19,7 @@ class OAuthControllerLinkedIn extends OAuthController {
  * @param object $app app object.
  * @return none.
  */  
-    public function __construct($app) {
+    public function __construct($app,$callback_page='login') {
         parent::__construct($app);
         // TODO: these should be fetched from the site settings for this plugin (e.g. $app->site->get('oauth', 'client_id'); )
         $clientId = 'ID';
@@ -29,7 +29,7 @@ class OAuthControllerLinkedIn extends OAuthController {
         $this->_provider = new \League\OAuth2\Client\Provider\LinkedIn([
             'clientId' => $clientId,
             'clientSecret' => $clientSecret,
-            'redirectUri' => $this->_app->site->uri['public'] . "/oauth/linkedin",
+            'redirectUri' => $this->_app->site->uri['public'] . "/oauth/linkedin/$callback_page",
             'scopes' => $scopes,
         ]);
     }
