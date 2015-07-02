@@ -82,6 +82,21 @@ class OAuthControllerLinkedIn extends OAuthController {
         $oauth_user->store();
     }
     
+    public function pageRegister()
+    {
+        $user_details_obj = $this->authenticate();
+        
+        $this->_app->render('oauth_register.html', [
+            'page' => [
+                'author' =>         $this->_app->site->author,
+                'title' =>          "OAuth Registration",
+                'description' =>    "Registration using OAuth",
+                'alerts' =>         $this->_app->alerts->getAndClearMessages()
+            ],
+                'oauth_details'=>$user_details_obj
+        ]);                  
+    }
+    
     // This function should authenticate the user with LinkedIn and return the LinkedIn profile data for that user.
     private function authenticate(){
         $var_getarr = $this->_app->request->get();
