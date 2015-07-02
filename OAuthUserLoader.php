@@ -9,7 +9,8 @@ class OAuthUserLoader extends \UserFrosting\MySqlObjectLoader {
     public static function init(){
         // Set table and columns for this class.
         static::$_table = OAuthUser::getTableAuthUser();
-        static::$_columns = static::$columns_user;
+        static::$_columns = OAuthUser::getColumnsAuthUser();
+//        static::$_columns = static::$columns_user_auth;
     }       
 
     /* Determine if a OAuthUser exists based on the value of a given column.  Returns true if a match is found, false otherwise.
@@ -27,6 +28,7 @@ class OAuthUserLoader extends \UserFrosting\MySqlObjectLoader {
      * @return OAuthUser
     */
     public static function fetch($value, $name = "id"){
+//print_r(static::$_columns);        
         $results = parent::fetch($value, $name);
         
         if ($results)

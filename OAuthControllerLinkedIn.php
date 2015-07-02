@@ -21,10 +21,9 @@ class OAuthControllerLinkedIn extends OAuthController {
  */  
     public function __construct($app) {
         parent::__construct($app);
-        
         // TODO: these should be fetched from the site settings for this plugin (e.g. $app->site->get('oauth', 'client_id'); )
-        $clientId = 'ID';
-        $clientSecret = 'SECRET';
+        $clientId = '78vtzpuzyf3njc';
+        $clientSecret = 'iNb4AGkxFSSClO1j';
         $scopes = ['r_basicprofile', 'r_emailaddress'];
 
         $this->_provider = new \League\OAuth2\Client\Provider\LinkedIn([
@@ -48,7 +47,8 @@ class OAuthControllerLinkedIn extends OAuthController {
         $user_details = $this->authenticate();
     
         // Load the OAuthUser object for the given uid
-        $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid', 'linkedin');
+//        $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid', 'linkedin');
+        $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid');
         
         // TODO: check that the user exists, and is not already logged in
         
@@ -63,7 +63,6 @@ class OAuthControllerLinkedIn extends OAuthController {
     public function register(){
         // Authenticate OAuth
         $user_details_obj = $this->authenticate();
-        
         // TODO: validate submitted fields and what-not
 
         // Create a new User object from the posted data
@@ -143,3 +142,4 @@ class OAuthControllerLinkedIn extends OAuthController {
     {
         // TODO
     }    
+}

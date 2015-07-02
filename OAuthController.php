@@ -11,7 +11,7 @@ namespace UserFrosting\OAuth;
  * @link http://srinivasnukala.com
  */
 
-abstract class OAuthController extends UserFrosting\BaseController {
+abstract class OAuthController extends \UserFrosting\BaseController {
 
     protected $_provider;       // An OAuth2 provider object
 

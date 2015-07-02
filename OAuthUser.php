@@ -27,6 +27,10 @@ class OAuthUser extends \UserFrosting\MySqlDatabaseObject {
         return static::$app->config('db')['db_prefix'] . static::$table_auth;
     }
     
+    public static function getColumnsAuthUser(){
+        return $this->_columns;
+    }
+    
 /**
  * store : Function to save OAuth records into database
  */        
