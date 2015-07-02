@@ -9,15 +9,15 @@
         <h1>Let's get started!</h1>
         <p class="lead">Registration is fast and simple.</p>
         {% include 'common/components/alerts.html' %}
-    {% for item in plugin_data %}
-    <p>{{item}}</p>
-    {% endfor %}
             <div class="row">
               <div class="col-md-12">
                   <a href="/account/register?oauthlogin=linkedin" class="btn btn-success" >Register using LinkedIn</a>
+<h2>Hello {{oauth_details.name}}</h2>' .
+                    <img src="{{oauth_details.imageUrl}}">
+            
+            <img src="http://www.gravatar.com/avatar/{{oauth_details.email}}?s=32" />';
               </div>
             </div>
-        {{ pluginHTML('login') }}
         
         <form name="register" method="post" action="{{site.uri.public}}/account/register" class="form-horizontal">
         {% include 'common/components/csrf.html' %}
@@ -43,7 +43,7 @@
                                 <span class="input-group-addon"><i class="fa fa-fw fa-edit"></i></span>
                                 <input type="text" class="form-control" name="display_name" 
                                        autocomplete="off"  placeholder="Display name"
-                                       value="{{ plugin_data.name }}">
+                                       value="{{ oauth_details.name }}">
                             </div>
                         </div>
                     </div>
@@ -57,7 +57,7 @@
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-fw fa-envelope"></i></span>
                                 <input type="text" class="form-control" name="email" 
-                                       placeholder="Email address" value="{{ plugin_data.email }}">
+                                       placeholder="Email address" value="{{ oauth_details.email }}">
                             </div>
                         </div>
                     </div>
