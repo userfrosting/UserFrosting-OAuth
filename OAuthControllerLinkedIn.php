@@ -22,8 +22,8 @@ class OAuthControllerLinkedIn extends OAuthController {
     public function __construct($app) {
         parent::__construct($app);
         // TODO: these should be fetched from the site settings for this plugin (e.g. $app->site->get('oauth', 'client_id'); )
-        $clientId = '78vtzpuzyf3njc';
-        $clientSecret = 'iNb4AGkxFSSClO1j';
+        $clientId = 'ID';
+        $clientSecret = 'SECRET';
         $scopes = ['r_basicprofile', 'r_emailaddress'];
 
         $this->_provider = new \League\OAuth2\Client\Provider\LinkedIn([
