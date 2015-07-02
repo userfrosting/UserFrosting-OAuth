@@ -30,6 +30,8 @@ function getProviderController($provider,$app){
 
 // This is the route that the provider will use as its redirect_uri
 $app->get('/oauth/:provider', function ($provider) use ($app) {
+        OAuthUserLoader::init();
+    
     // The provider has sent us back here.  Did we get an authorization code, or the access token?
     $get = $app->request->get();
     
@@ -40,6 +42,7 @@ $app->get('/oauth/:provider', function ($provider) use ($app) {
         // If we're logging them in, just call that method and it will automatically redirect us
 //echo("Line 42 user trying to login ".$_SESSION['oauth_action']);            
         if ($_SESSION['oauth_action'] == "login"){
+            
             $controller->login();
         } else if ($_SESSION['oauth_action'] == "register"){
             // TODO: take them to the registration confirmation page

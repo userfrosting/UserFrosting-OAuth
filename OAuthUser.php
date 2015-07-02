@@ -15,7 +15,6 @@ class OAuthUser extends \UserFrosting\MySqlDatabaseObject {
             "oauth_details",
         "created_at"];
     
-    
     public function __construct($properties, $id = null) {
         $this->_table = static::getTableAuthUser();
         $this->_columns = static::$columns_user_auth;
