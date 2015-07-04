@@ -6,19 +6,20 @@
     <div class="container">
         {% include 'common/components/main-nav.html' %}
       <div class="jumbotron">
-        <h2>Alright we linked your account!</h2>
+        <h1>Let's get started!</h1>
+        <p class="lead">Registration is fast and simple.</p>
+        {% include 'common/components/alerts.html' %}
             <div class="row">
               <div class="col-md-12">
-                <p class="lead1">here is what we see in your profile!</p>
-                <h3>{{oauth_details.name}}</h3>
+                  <a href="/account/register?oauthlogin=linkedin" class="btn btn-success" >Register using LinkedIn</a>
+<h2>Hello {{oauth_details.name}}</h2>' .
                     <img src="{{oauth_details.imageUrl}}">
-                    <img src="http://www.gravatar.com/avatar/{{oauth_details.email}}?s=32" />
+            
+            <img src="http://www.gravatar.com/avatar/{{oauth_details.email}}?s=32" />';
               </div>
             </div>
-        <p class="lead">Confirm your profile and we are good to go.</p>
-        {% include 'common/components/alerts.html' %}
         
-        <form name="register" method="post" action="{{site.uri.public}}/oauth/linkedin/register" class="form-horizontal">
+        <form name="register" method="post" action="{{site.uri.public}}/account/register" class="form-horizontal">
         {% include 'common/components/csrf.html' %}
             <div class="row">
                 <div class="col-sm-12">
