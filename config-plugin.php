@@ -15,17 +15,30 @@ function getProviderController($provider, $callback_page, $app) {
     switch ($provider) {
         case "linkedin" :
             require_once('OAuthControllerLinkedIn.php');
-
             return new \UserFrosting\OAuth\OAuthControllerLinkedIn($app, $callback_page);
-
+            break;
+        case "facebook" :
+            require_once('OAuthControllerFacebook.php');
+            return new \UserFrosting\OAuth\OAuthControllerFacebook($app, $callback_page);
+            break;
         default:
 //            return false;
             $app->notFound();
+            break;
     }
 }
 
 /* Import UserFrosting variables as global Twig variables */
 $twig = $app->view()->getEnvironment();
+
+$twig->addFilter( new \Twig_SimpleFilter('cast_to_array', function ($stdClassObject) {
+    $response = array();
+    foreach ((array) $stdClassObject as $key => $value) {
+        $response[str_replace('*','',$key)]= $value;
+    }
+//print_r($response);    
+    return $response;
+}));
 
 $loader = $twig->getLoader();
 // First look in user's theme...

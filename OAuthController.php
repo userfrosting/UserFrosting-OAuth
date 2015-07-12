@@ -13,8 +13,10 @@ namespace UserFrosting\OAuth;
 
 abstract class OAuthController extends \UserFrosting\BaseController {
 
+    protected $_provider_name;       // An OAuth2 provider object
     protected $_provider;       // An OAuth2 provider object
     protected $_user_profile;       // An profile object returned by the provider
+    
 
 /**
  * constructor
@@ -22,15 +24,173 @@ abstract class OAuthController extends \UserFrosting\BaseController {
  * @param object $app app object.
  * @return none.
  */  
-    public function __construct($app) {
+    public function __construct($app,$provider_name) {
+        $this->_provider_name=$provider_name;
         parent::__construct($app);
+        
     }
 
-
-    // This should be called when a user requests an authorization code by clicking a link (e.g. /oauth/linkedin/login)
-    public function authorize(){
-
+// This should be called when a user requests an authorization code by clicking a link (e.g. /oauth/:oauth/login)
+    public function authorize() {
+        $authUrl = $this->_provider->getAuthorizationUrl();
+        $_SESSION['oauth2state'] = $this->_provider->state;
+        $this->_app->redirect($authUrl);
     }
+
+// Log a user in by authenticating via OAuth Provider.
+    public function login() {
+// Authenticate 
+        $user_details = $this->authenticate();
+// Load the OAuthUser object for the given uid
+        $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid');
+//print_r($oauth_user);        
+// TODO: check that the user exists, and is not already logged in
+// Now get the UF user object and log the user in
+        if ($oauth_user !== false) {
+            $_SESSION["userfrosting"]["user"] = \UserFrosting\UserLoader::fetch($oauth_user->user_id);
+            $this->_app->user = $_SESSION["userfrosting"]["user"];
+            $this->_app->user->login();
+        } else {
+            $this->_app->alerts->addMessageTranslated("danger", "Your ".$this->_provider_name." Account is not connected to a local account. Plase register using LinkedIn first.", ["provider" => "LinkedIn"]);
+        }
+        $this->_app->redirect($this->_app->urlFor('uri_home'));
+    }
+
+    public function storeOAuth($userid) {
+        $this->_user_profile = $_SESSION['userfrosting']['oauth_details'];
+        $user_details = $this->transform($this->_user_profile);
+        $user_details['user_id'] = $userid;
+        $user_details['provider'] = strtolower($this->_provider_name);
+
+// check to see if we have a record with this UID
+        $cur_oauth_user = OAuthUserLoader::fetch($user_details['uid'], 'uid');
+// if we find a record with the UID then, update the record 
+        if ($cur_oauth_user !== false) {
+            foreach($user_details as $usrkey=>$usrdata)
+            {
+// do not update the UID or user_id fields                
+                if($usrkey !='user_id' && $usrkey !='uid')
+                $cur_oauth_user->$usrkey =$usrdata;
+            }
+            $oauth_user = $cur_oauth_user;
+            
+        }
+// the UID does not exist so create new
+        else
+        {
+            $oauth_user = new OAuthUser($user_details);
+        }
+        
+// Save to database
+        $oauth_user->store();
+    }
+
+    public function doOAuthAction($action) {
+        switch ($action) {
+            case "confirm":
+                $this->storeOAuth($this->_app->user->id);
+                $this->_app->redirect('/account/settings');
+                break;
+        }
+    }
+
+// Register a user by authenticating via OAuth Provider.
+    public function register() {
+        $user = $this->ufRegister();
+        $this->storeOAuth($user->id);
+    }
+
+// Show registration page using Open Authentication details    
+    public function pageRegister() {
+        $user_details_obj = $this->authenticate();
+
+        $schema = new \Fortress\RequestSchema($this->_app->config('schema.path') . "/forms/register.json");
+        $validators = new \Fortress\ClientSideValidator($schema, $this->_app->translator);
+
+        $settings = $this->_app->site;
+
+// If registration is disabled, send them back to the home page with an error message
+        if (!$settings->can_register) {
+            $this->_app->alerts->addMessageTranslated("danger", "ACCOUNT_REGISTRATION_DISABLED");
+            $this->_app->redirect('login');
+        }
+
+// render the registratoin page, this html is stored locally in the plugin directory        
+        $this->_app->render('oauth_register.html', [
+            'page' => [
+                'author' => $this->_app->site->author,
+                'title' => "OAuth Registration",
+                'description' => "Registration using OAuth",
+                'alerts' => $this->_app->alerts->getAndClearMessages(),
+                'active_page' => "account/register"
+            ],
+            'captcha_image' => $this->generateCaptcha(),
+            'validators' => $validators->formValidationRulesJson(),
+            'oauth_details' => $user_details_obj
+        ]);
+    }
+
+// Show OAuth Confirmation page using Open Authentication details    
+    
+    public function pageConfirmOAuth() {
+        $user_authobj = $this->authenticate();
+        $user_details = $this->_user_profile;
+//print_r($this->_user_profile);        
+// Waiting for league/oauth2-client to add $this->_provider->providerResponse attribute
+//        $user_details_obj = $this->_provider->providerResponse;
+//        $user_details = get_object_vars($user_details_obj);
+        $get = $this->_app->request->get();
+// If we received an authorization code, then resume our action
+        if (isset($get['code'])) {
+
+            $this->storeOAuth($this->_app->user->id);
+
+// render the confirmation page, this html is stored locally in the plugin directory        
+            
+            $this->_app->render('oauth_confirm.html', [
+                'page' => [
+                    'author' => $this->_app->site->author,
+                    'title' => $this->_provider_name." Confirmation",
+                    'description' => $this->_provider_name." authentication successful",
+                    'alerts' => $this->_app->alerts->getAndClearMessages()
+                ],
+                'oauth_details' => $this->_user_profile,
+                'oauth_data' => $user_details,
+                'oauth_provider' => $this->_provider_name
+            ]);
+        }
+    }
+
+// This function should authenticate the user with OAuth Provider and return the user profile data for that user.
+    private function authenticate() {
+        $var_getarr = $this->_app->request->get();
+        $ms = $this->_app->alerts;
+// Try to get an access token (using the authorization code grant)
+        $token = $this->_provider->getAccessToken('authorization_code', [
+            'code' => $var_getarr['code']
+        ]);
+
+// We got an access token, so return the user's details
+        $this->_user_profile = $this->_provider->getUserDetails($token);
+// store the oauth details received from the call in a session variable for use later        
+        $_SESSION['userfrosting']['oauth_details'] = $this->_user_profile;
+        return $_SESSION['userfrosting']['oauth_details'];
+    }
+
+// Transform raw details from the provider's API into the format necessary for our database
+    private function transform($details_obj) {
+        $output_arr = [];
+
+        $output_arr['uid'] = $details_obj->uid;
+        $output_arr['oauth_details'] = serialize($details_obj);
+        $output_arr['first_name'] = $details_obj->firstName;
+        $output_arr['last_name'] = $details_obj->lastName;
+        $output_arr['email'] = $details_obj->email;
+        $output_arr['picture_url'] = $details_obj->imageUrl;
+
+        return $output_arr;
+    }
+    
     
 
     public function ufRegister(){
@@ -178,15 +338,6 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         return $user;
     }
     
-    // This function should automatically login a user who has been authenticated by the OAuth provider
-    public function login(){
-    
-    }
-    
-    // Transform raw details from the provider's API into the format necessary for our database
-    private function transform($details_obj) {
-    
-    }
     
 /**
  * register - to invoke the open auth plugin in the registration screen

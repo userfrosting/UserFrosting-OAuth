@@ -23,7 +23,7 @@
                     <div class="table-responsive">
                         <table class="table table-condensed">
                             <tr><th>Field</th><th>Value</th></tr>
-                            {% for key,val in oauth_data %}
+                            {% for key,val in oauth_data |cast_to_array %}
                             <tr>
                                 <td >{{ key }}</td>
                                 <td >{{ val }}</td>
