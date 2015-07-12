@@ -30,7 +30,6 @@ class OAuthUserLoader extends \UserFrosting\MySqlObjectLoader {
     public static function fetch($value, $name = "id"){
 //print_r(static::$_columns);        
         $results = parent::fetch($value, $name);
-        
         if ($results)
             return new OAuthUser($results, $results['id']);
         else
