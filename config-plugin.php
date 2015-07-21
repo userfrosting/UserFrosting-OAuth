@@ -44,8 +44,20 @@ $loader = $twig->getLoader();
 // First look in user's theme...
 $loader->addPath($app->config('plugins.path') . "/UserFrosting-OAuth/templates");
 
+$table_user_oauth = new \UserFrosting\DatabaseTable($app->config('db')['db_prefix'] . "user_oauth", [
+            "provider",
+            "user_id",
+            "uid",
+            "email",
+            "first_name",
+            "last_name",
+            "picture_url",
+            "oauth_details",
+        "created_at"]);
+
 // Innitialize the OAuth User Loader the table and column definitions will be loaded
-OAuthUserLoader::init();
+\UserFrosting\Database::setTable("user_oauth", $table_user_oauth);
+OAuthUserLoader::init($table_user_oauth);
 
 // Define routes
 // This is the GET route for the "login with ___" button

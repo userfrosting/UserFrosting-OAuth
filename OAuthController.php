@@ -37,13 +37,17 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $this->_app->redirect($authUrl);
     }
 
-// Log a user in by authenticating via OAuth Provider.
+// 
+
+
+/**
+ * login - Log a user in by authenticating via OAuth Provider.
+ */    
     public function login() {
 // Authenticate 
         $user_details = $this->authenticate();
 // Load the OAuthUser object for the given uid
         $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid');
-//print_r($oauth_user);        
 // TODO: check that the user exists, and is not already logged in
 // Now get the UF user object and log the user in
         if ($oauth_user !== false) {
@@ -56,6 +60,10 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $this->_app->redirect($this->_app->urlFor('uri_home'));
     }
 
+/**
+ * storeOauth - Save the oauth data to the datbase
+ * @param type $userid
+ */    
     public function storeOAuth($userid) {
         $this->_user_profile = $_SESSION['userfrosting']['oauth_details'];
         $user_details = $this->transform($this->_user_profile);
@@ -85,6 +93,10 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $oauth_user->store();
     }
 
+/**
+ * Perform OAuth action for the settings page
+ * @param type $action
+ */    
     public function doOAuthAction($action) {
         switch ($action) {
             case "confirm":
@@ -94,13 +106,18 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         }
     }
 
-// Register a user by authenticating via OAuth Provider.
+/**
+ * Register a user by authenticating via OAuth Provider.
+ */    
     public function register() {
         $user = $this->ufRegister();
         $this->storeOAuth($user->id);
     }
 
-// Show registration page using Open Authentication details    
+
+/**
+ * Show registration page using Open Authentication details    
+ */    
     public function pageRegister() {
         $user_details_obj = $this->authenticate();
 
@@ -130,12 +147,12 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         ]);
     }
 
-// Show OAuth Confirmation page using Open Authentication details    
-    
+/**
+ * Show OAuth Confirmation page using Open Authentication details    
+ */    
     public function pageConfirmOAuth() {
         $user_authobj = $this->authenticate();
         $user_details = $this->_user_profile;
-//print_r($this->_user_profile);        
 // Waiting for league/oauth2-client to add $this->_provider->providerResponse attribute
 //        $user_details_obj = $this->_provider->providerResponse;
 //        $user_details = get_object_vars($user_details_obj);
@@ -161,7 +178,10 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         }
     }
 
-// This function should authenticate the user with OAuth Provider and return the user profile data for that user.
+/**
+ * This function should authenticate the user with OAuth Provider and return the user profile data for that user.
+ * @return type
+ */
     private function authenticate() {
         $var_getarr = $this->_app->request->get();
         $ms = $this->_app->alerts;
@@ -169,7 +189,13 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $token = $this->_provider->getAccessToken('authorization_code', [
             'code' => $var_getarr['code']
         ]);
-
+//print_r($token);
+//$token->expires
+//$token->accessToken
+//$token->uid
+//$token->refreshToken
+//die();
+        
 // We got an access token, so return the user's details
         $this->_user_profile = $this->_provider->getUserDetails($token);
 // store the oauth details received from the call in a session variable for use later        
@@ -177,7 +203,12 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         return $_SESSION['userfrosting']['oauth_details'];
     }
 
-// Transform raw details from the provider's API into the format necessary for our database
+
+/**
+ * Transform raw details from the provider's API into the format necessary for our database
+ * @param type $details_obj
+ * @return type
+ */    
     private function transform($details_obj) {
         $output_arr = [];
 
@@ -191,7 +222,11 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         return $output_arr;
     }
     
-    
+/**
+ * Process UserFrosting registration. This function is copied form UserFrosting class and modified to register the user first
+ * and then save the Open Authentication details
+ * @return \UserFrosting\User
+ */    
 
     public function ufRegister(){
         // POST: user_name, display_name, email, title, password, passwordc, captcha, spiderbro, csrf_token
@@ -317,12 +352,15 @@ abstract class OAuthController extends \UserFrosting\BaseController {
             if(!$mail->send()) {
                 $ms->addMessageTranslated("danger", "MAIL_ERROR");
                 error_log('Mailer Error: ' . $mail->ErrorInfo);
-// Srinivas : Should we be halting the registraiton process if the email could not be sent out
-// CAn we just give a message that a confirmation could not be sent out, contact the site admin
-// Because at this point the user record is already created. And the user should be able to login
-// Halting it here, does not let the process proceed with the OpenAuthentication, so now the user is stuck
-// with just UF account and does not have a link to the Open Authentication. 
-// Would be good to exit with a warning
+/**
+ *
+ *  Srinivas : Should we be halting the registraiton process if the email could not be sent out
+ * CAn we just give a message that a confirmation could not be sent out, contact the site admin
+ * Because at this point the user record is already created. And the user should be able to login
+ * Halting it here, does not let the process proceed with the OpenAuthentication, so now the user is stuck
+ * with just UF account and does not have a link to the Open Authentication. 
+ * Would be good to exit with a warning
+ */                
 //                 
 //                $this->_app->halt(500);
             }
@@ -363,6 +401,5 @@ abstract class OAuthController extends \UserFrosting\BaseController {
     {
         // TODO
     }    
-    
-
+        
 }
