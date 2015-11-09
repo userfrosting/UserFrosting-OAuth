@@ -23,20 +23,20 @@ Add these lines to the composer.json in the userfrosting directory
 
 - Download the zip file and put this in the userfrosting/plugins folder
 - Create OAuth Table using the following script
-CREATE TABLE `uf_user_oauth` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `provider` varchar(20) DEFAULT NULL,
-  `user_id` int(11) NOT NULL,
-  `uid` varchar(50) NOT NULL,
-  `email` varchar(200) DEFAULT NULL,
-  `first_name` varchar(200) DEFAULT NULL,
-  `last_name` varchar(200) DEFAULT NULL,
-  `picture_url` varchar(500) DEFAULT NULL,
-  `oauth_details` text,
-  `created_at` datetime DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-)
+        CREATE TABLE `uf_user_oauth` (
+          `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+          `provider` varchar(20) DEFAULT NULL,
+          `user_id` int(11) NOT NULL,
+          `uid` varchar(50) NOT NULL,
+          `email` varchar(200) DEFAULT NULL,
+          `first_name` varchar(200) DEFAULT NULL,
+          `last_name` varchar(200) DEFAULT NULL,
+          `picture_url` varchar(500) DEFAULT NULL,
+          `oauth_details` text,
+          `created_at` datetime DEFAULT NULL,
+          `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`)
+        )
 - Update the UserFrosting-OAuth/controllers/OAuthControllerFacebook.php / Linkedin.php with the key and secret values for your application
 - Login using oauth
       /oauth/linkedin/login
