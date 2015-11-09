@@ -1,10 +1,12 @@
 <?php
 namespace UserFrosting\OAuth;
+use \Illuminate\Database\Capsule\Manager as Capsule; 
+class OAuthUser extends \UserFrosting\UFModel {
+protected static $_table_id = "user_oauth";
 
-class OAuthUser extends \UserFrosting\MySqlDatabaseObject {
         
     public function __construct($properties, $id = null) {
-        $this->_table = static::getTable('user_oauth');
+//        $this->_table = static::getTable('user_oauth');
                             
         parent::__construct($properties, $id);
             

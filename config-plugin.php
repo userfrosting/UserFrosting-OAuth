@@ -2,23 +2,43 @@
 
 namespace UserFrosting\OAuth;
 
-require_once('OAuthController.php');
-require_once('OAuthUser.php');
-require_once('OAuthUserLoader.php');
+require_once('controllers/OAuthController.php');
+require_once('models/OAuthUser.php');
+require_once('models/OAuthUserLoader.php');
 
 // TODO: Let Composer autoload all our classes
 
 use UserFrosting as UF;
 
+function echobr($par_str) {
+    echo("<br>$par_str<br>");
+    error_log("$par_str \n");
+}
+
+function echoarr($par_arr, $par_comment = 'none') {
+    if ($par_comment != 'none')
+        echobr($par_comment);
+    echo "<pre>";
+    print_r($par_arr);
+    echo "</pre>";
+    error_log("<pre>$par_comment \n" .
+            print_r($par_arr, true) . " \n\n </pre>");
+}
+
+function logarr($par_arr, $par_comment = 'none') {
+    error_log("<pre>$par_comment \n" .
+            print_r($par_arr, true) . " \n\n </pre>");
+}
+
 // Fetch the relevant controller
 function getProviderController($provider, $callback_page, $app) {
     switch ($provider) {
         case "linkedin" :
-            require_once('OAuthControllerLinkedIn.php');
+            require_once('controllers/OAuthControllerLinkedIn.php');
             return new \UserFrosting\OAuth\OAuthControllerLinkedIn($app, $callback_page);
             break;
         case "facebook" :
-            require_once('OAuthControllerFacebook.php');
+            require_once('controllers/OAuthControllerFacebook.php');
             return new \UserFrosting\OAuth\OAuthControllerFacebook($app, $callback_page);
             break;
         default:
@@ -31,10 +51,10 @@ function getProviderController($provider, $callback_page, $app) {
 /* Import UserFrosting variables as global Twig variables */
 $twig = $app->view()->getEnvironment();
 
-$twig->addFilter( new \Twig_SimpleFilter('cast_to_array', function ($stdClassObject) {
+$twig->addFilter(new \Twig_SimpleFilter('cast_to_array', function ($stdClassObject) {
     $response = array();
     foreach ((array) $stdClassObject as $key => $value) {
-        $response[str_replace('*','',$key)]= $value;
+        $response[str_replace('*', '', $key)] = $value;
     }
 //print_r($response);    
     return $response;
@@ -45,19 +65,20 @@ $loader = $twig->getLoader();
 $loader->addPath($app->config('plugins.path') . "/UserFrosting-OAuth/templates");
 
 $table_user_oauth = new \UserFrosting\DatabaseTable($app->config('db')['db_prefix'] . "user_oauth", [
-            "provider",
-            "user_id",
-            "uid",
-            "email",
-            "first_name",
-            "last_name",
-            "picture_url",
-            "oauth_details",
-        "created_at"]);
+    "provider",
+    "user_id",
+    "uid",
+    "email",
+    "first_name",
+    "last_name",
+    "picture_url",
+    "oauth_details",
+    "created_at"]);
 
 // Innitialize the OAuth User Loader the table and column definitions will be loaded
-\UserFrosting\Database::setTable("user_oauth", $table_user_oauth);
-OAuthUserLoader::init($table_user_oauth);
+//\UserFrosting\Database::setSchemaTable("staff_event_user", $table_staff_event_user);
+//OAuthUserLoader::init($table_user_oauth);
+\UserFrosting\Database::setSchemaTable("user_oauth", $table_user_oauth);
 
 // Define routes
 // This is the GET route for the "login with ___" button
@@ -100,7 +121,6 @@ $app->get('/oauth/:provider/register', function ($provider) use ($app) {
 $app->post('/oauth/:provider/register', function ($provider) use ($app) {
     $controller = getProviderController($provider, 'register', $app);
 //    $controller = $_SESSION["userfrosting"]['oauth_controller'];
-
     // complete the registration process 
     $controller->register();
 });
@@ -115,8 +135,8 @@ $app->get('/oauth/:provider/settings', function ($provider) use ($app) {
 
     // If we received an authorization code, then resume our action
     if (isset($get['code'])) {
-    // If OAuth call is successful and we have a code then 
-    // show the OAuth confirmation  
+        // If OAuth call is successful and we have a code then 
+        // show the OAuth confirmation  
         $controller->pageConfirmOAuth();
     } else {
         // Otherwise, request an authorization code
@@ -125,7 +145,9 @@ $app->get('/oauth/:provider/settings', function ($provider) use ($app) {
 });
 
 // This is the POST route for the "settings/action with ___" button
+//http://userfrosting.github/oauth/linkedin/settings/confirm
 $app->post('/oauth/:provider/settings/:action', function ($provider, $action) use ($app) {
+error_log("Line 150 $provider ");
     $controller = getProviderController($provider, 'settings', $app);
     // Store this action so we remember what we're doing after we get the authorization code
     $_SESSION['oauth_action'] = "settings-$action";

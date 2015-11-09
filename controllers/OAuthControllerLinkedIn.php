@@ -3,15 +3,15 @@
 namespace UserFrosting\OAuth;
 
 /**
- * OAuthControllerFacebook
+ * OAuthControllerLinkedIn
  *
- * Controller class for authenticating via Facebook.
+ * Controller class for authenticating via LinkedIn.
  *
  * @package UserFrosting-OpenAuthentication
  * @author Srinivas Nukala
  * @link http://srinivasnukala.com
  */
-class OAuthControllerFacebook extends OAuthController {
+class OAuthControllerLinkedIn extends OAuthController {
 
     /**
      * constructor
@@ -20,16 +20,24 @@ class OAuthControllerFacebook extends OAuthController {
      * @return none.
      */
     public function __construct($app, $callback_page = 'login') {
-        parent::__construct($app,'Facebook');
+        parent::__construct($app,'LinkedIn');
 // TODO: these should be fetched from the site settings for this plugin (e.g. $app->site->get('oauth', 'client_id'); )
-        $clientId = 'ID';
-        $clientSecret = 'SECRET';
+        $clientId = '<CLIENT ID>';
+        $clientSecret = '<SECRET>';
+        $scopes = ['r_basicprofile', 'r_emailaddress'];
+        $oaFields = ['id', 'email-address', 'first-name', 'last-name', 'headline',
+            'location', 'industry', 'picture-url', 'public-profile-url', 'summary', 'specialties', 'positions'];
 
-        $this->_provider = new \League\OAuth2\Client\Provider\Facebook([
+//        $this->_provider = new \League\OAuth2\Client\Provider\LinkedIn([
+//            'clientId' => $clientId,
+//            'clientSecret' => $clientSecret,
+//            'redirectUri' => $this->_app->site->uri['public'] . "/oauth/linkedin/$callback_page",
+//            'scopes' => $scopes]);
+        $this->_provider = new \League\OAuth2\Client\Provider\LinkedIn([
             'clientId' => $clientId,
             'clientSecret' => $clientSecret,
-            'redirectUri' => $this->_app->site->uri['public'] . "/oauth/facebook/$callback_page"]);
-//        $this->_provider->fields = $oaFields;
+            'redirectUri' => $this->_app->site->uri['public'] . "/oauth/linkedin/$callback_page"]);
+        $this->_provider->fields = $oaFields;
     }
 
     /**

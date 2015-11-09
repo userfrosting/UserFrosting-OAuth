@@ -33,7 +33,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
 // This should be called when a user requests an authorization code by clicking a link (e.g. /oauth/:oauth/login)
     public function authorize() {
         $authUrl = $this->_provider->getAuthorizationUrl();
-        $_SESSION['oauth2state'] = $this->_provider->state;
+//        $_SESSION['oauth2state'] = $this->_provider->state;
         $this->_app->redirect($authUrl);
     }
 
@@ -46,14 +46,21 @@ abstract class OAuthController extends \UserFrosting\BaseController {
     public function login() {
 // Authenticate 
         $user_details = $this->authenticate();
+//logarr($user_details,"Line 49");        
 // Load the OAuthUser object for the given uid
-        $oauth_user = OAuthUserLoader::fetch($user_details->uid, 'uid');
+        $oauth_user = OAuthUserLoader::fetch($user_details['id'], 'uid');
+//logarr($oauth_user,"Line 51");        
 // TODO: check that the user exists, and is not already logged in
 // Now get the UF user object and log the user in
         if ($oauth_user !== false) {
-            $_SESSION["userfrosting"]["user"] = \UserFrosting\UserLoader::fetch($oauth_user->user_id);
-            $this->_app->user = $_SESSION["userfrosting"]["user"];
-            $this->_app->user->login();
+            
+//            $_SESSION["userfrosting"]["user"] = \UserFrosting\UserLoader::fetch($oauth_user->user_id);
+//            $this->_app->user = $_SESSION["userfrosting"]["user"];
+//            $this->_app->login($user);
+            $var_ufuser = \UserFrosting\User::find($oauth_user->user_id);
+            $this->_app->login($var_ufuser);       
+            
+ //           $this->_app->user->login();
         } else {
             $this->_app->alerts->addMessageTranslated("danger", "Your ".$this->_provider_name." Account is not connected to a local account. Plase register using LinkedIn first.", ["provider" => "LinkedIn"]);
         }
@@ -72,25 +79,27 @@ abstract class OAuthController extends \UserFrosting\BaseController {
 
 // check to see if we have a record with this UID
         $cur_oauth_user = OAuthUserLoader::fetch($user_details['uid'], 'uid');
+//logarr($user_details,"Line 82 user id is $userid and uid is ".$user_details['uid']);        
+//logarr($cur_oauth_user,"Line 84");        
 // if we find a record with the UID then, update the record 
-        if ($cur_oauth_user !== false) {
+        if (is_object($cur_oauth_user)) {
             foreach($user_details as $usrkey=>$usrdata)
             {
 // do not update the UID or user_id fields                
                 if($usrkey !='user_id' && $usrkey !='uid')
-                $cur_oauth_user->$usrkey =$usrdata;
+                    $cur_oauth_user->$usrkey =$usrdata;
             }
             $oauth_user = $cur_oauth_user;
-            
         }
 // the UID does not exist so create new
         else
         {
             $oauth_user = new OAuthUser($user_details);
         }
-        
+//logarr($user_details,"Line 99 user id $userid");      
+//logarr($oauth_user,"Line 99 user id oauth_user");      
 // Save to database
-        $oauth_user->store();
+        $oauth_user->save();
     }
 
 /**
@@ -100,7 +109,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
     public function doOAuthAction($action) {
         switch ($action) {
             case "confirm":
-                $this->storeOAuth($this->_app->user->id);
+                $this->storeOAuth($_SESSION["userfrosting"]["user_id"]);
                 $this->_app->redirect('/account/settings');
                 break;
         }
@@ -122,18 +131,18 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $user_details_obj = $this->authenticate();
 
         $schema = new \Fortress\RequestSchema($this->_app->config('schema.path') . "/forms/register.json");
-        $validators = new \Fortress\ClientSideValidator($schema, $this->_app->translator);
+        $this->_app->jsValidator->setSchema($schema);       
 
         $settings = $this->_app->site;
-
-// If registration is disabled, send them back to the home page with an error message
-        if (!$settings->can_register) {
+        
+        // If registration is disabled, send them back to the login page with an error message
+        if (!$settings->can_register){
             $this->_app->alerts->addMessageTranslated("danger", "ACCOUNT_REGISTRATION_DISABLED");
             $this->_app->redirect('login');
         }
-
+    
 // render the registratoin page, this html is stored locally in the plugin directory        
-        $this->_app->render('oauth_register.html', [
+        $this->_app->render('oauth_register.html.twig', [
             'page' => [
                 'author' => $this->_app->site->author,
                 'title' => "OAuth Registration",
@@ -142,7 +151,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
                 'active_page' => "account/register"
             ],
             'captcha_image' => $this->generateCaptcha(),
-            'validators' => $validators->formValidationRulesJson(),
+            'validators' => $this->_app->jsValidator->rules(),
             'oauth_details' => $user_details_obj
         ]);
     }
@@ -151,20 +160,35 @@ abstract class OAuthController extends \UserFrosting\BaseController {
  * Show OAuth Confirmation page using Open Authentication details    
  */    
     public function pageConfirmOAuth() {
-        $user_authobj = $this->authenticate();
+        
+        $user_details_obj = $this->authenticate();
         $user_details = $this->_user_profile;
+
+        $schema = new \Fortress\RequestSchema($this->_app->config('schema.path') . "/forms/register.json");
+        $this->_app->jsValidator->setSchema($schema);       
+
+        $settings = $this->_app->site;
+        
+        // If registration is disabled, send them back to the login page with an error message
+        if (!$settings->can_register){
+            $this->_app->alerts->addMessageTranslated("danger", "ACCOUNT_REGISTRATION_DISABLED");
+            $this->_app->redirect('login');
+        }
+        
 // Waiting for league/oauth2-client to add $this->_provider->providerResponse attribute
 //        $user_details_obj = $this->_provider->providerResponse;
 //        $user_details = get_object_vars($user_details_obj);
         $get = $this->_app->request->get();
 // If we received an authorization code, then resume our action
         if (isset($get['code'])) {
-
-            $this->storeOAuth($this->_app->user->id);
+//$_SESSION["userfrosting"]["user_id"]
+//            $this->storeOAuth($this->_app->user->id);
+//error_log("USer id in session is ".$_SESSION["userfrosting"]["user_id"]);            
+            $this->storeOAuth($_SESSION["userfrosting"]["user_id"]);
 
 // render the confirmation page, this html is stored locally in the plugin directory        
             
-            $this->_app->render('oauth_confirm.html', [
+            $this->_app->render('oauth_confirm.html.twig', [
                 'page' => [
                     'author' => $this->_app->site->author,
                     'title' => $this->_provider_name." Confirmation",
@@ -189,15 +213,12 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $token = $this->_provider->getAccessToken('authorization_code', [
             'code' => $var_getarr['code']
         ]);
-//print_r($token);
-//$token->expires
-//$token->accessToken
-//$token->uid
-//$token->refreshToken
-//die();
-        
 // We got an access token, so return the user's details
-        $this->_user_profile = $this->_provider->getUserDetails($token);
+//        $this->_user_profile = $this->_provider->getUserDetails($token);
+        $var_oauthuser = $this->_provider->getResourceOwner($token);
+        $this->_user_profile = $var_oauthuser->toArray();
+//logarr($var_oauthuser,"Line 209 oauth resourceowner");        
+//logarr($this->_user_profile,"Line 209 oauth user profile");        
 // store the oauth details received from the call in a session variable for use later        
         $_SESSION['userfrosting']['oauth_details'] = $this->_user_profile;
         return $_SESSION['userfrosting']['oauth_details'];
@@ -209,15 +230,15 @@ abstract class OAuthController extends \UserFrosting\BaseController {
  * @param type $details_obj
  * @return type
  */    
-    private function transform($details_obj) {
+    private function transform($oauth_arr) {
         $output_arr = [];
 
-        $output_arr['uid'] = $details_obj->uid;
-        $output_arr['oauth_details'] = serialize($details_obj);
-        $output_arr['first_name'] = $details_obj->firstName;
-        $output_arr['last_name'] = $details_obj->lastName;
-        $output_arr['email'] = $details_obj->email;
-        $output_arr['picture_url'] = $details_obj->imageUrl;
+        $output_arr['uid'] = $oauth_arr['id'];
+        $output_arr['oauth_details'] = serialize($oauth_arr);
+        $output_arr['first_name'] = $oauth_arr['firstName'];
+        $output_arr['last_name'] = $oauth_arr['lastName'];
+        $output_arr['email'] = $oauth_arr['emailAddress'];
+        $output_arr['picture_url'] = $oauth_arr['pictureUrl'];
 
         return $output_arr;
     }
