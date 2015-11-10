@@ -1,30 +1,15 @@
 <?php
 namespace UserFrosting\OAuth;
+use \Illuminate\Database\Capsule\Manager as Capsule; 
+class OAuthUser extends \UserFrosting\UFModel {
+protected static $_table_id = "user_oauth";
 
-class OAuthUser extends \UserFrosting\MySqlDatabaseObject {
         
-    protected static $table_auth='user_oauth';  // The oauth table. 
-    protected static $columns_user_auth = [
-            "provider",
-            "user_id",
-            "uid",
-            "email",
-            "first_name",
-            "last_name",
-            "picture_url",
-            "oauth_details",
-        "created_at"];
-    
     public function __construct($properties, $id = null) {
-        $this->_table = static::getTableAuthUser();
-        $this->_columns = static::$columns_user_auth;
+//        $this->_table = static::getTable('user_oauth');
                             
         parent::__construct($properties, $id);
             
-    }
-    
-    public static function getTableAuthUser(){
-        return static::$app->config('db')['db_prefix'] . static::$table_auth;
     }
     
 /**

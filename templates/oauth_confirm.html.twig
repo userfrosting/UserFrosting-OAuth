@@ -1,0 +1,71 @@
+{% extends "layouts/layout-dashboard.twig" %}
+
+{# Set page properties (page.*) here. #}
+{% block page %}
+    {# By putting this in a special block, we ensure that it will be set AFTER the default values are set in the parent template, 
+    but BEFORE the page itself is rendered. #}    
+    {% set page = page | merge({
+        "title"       : "Account Settings",
+        "description" : "Update your account settings, including email, display name, and password."
+    }) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class='panel panel-primary'>
+                <div class='panel-heading'>
+                    <h3 class='panel-title'>
+                        <i class='fa fa-gear'></i>
+                        Confirm {{oauth_provider}} registration</h3>
+                </div>
+                <div class='panel-body'>
+                    <form  style="text-align:left;" role='form'  name="oauth_register" method="post" action="{{site.uri.public}}/oauth/{{ oauth_provider|lower }}/settings/confirm" class="form-horizontal">
+<!--                    <form class='form-horizontal' role='form' name='settings' action='{{site.uri.public}}/account/settings' method='post'> -->
+                        <!-- Prevent browsers from trying to autofill the password field.  See http://stackoverflow.com/a/23234498/2970321 -->
+                        <input type="text" style="display:none">
+                        <input type="password" style="display:none">
+                        <input type='hidden' name="{{csrf_key}}" value="{{csrf_token}}"> 
+
+                        {% if checkAccess('update_account_setting', {('user'): user, ('property'): 'email'}) %}
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5>Hello {{ oauth_details.firstName~" " ~oauth_details.lastName }}</h5>
+                                    <img src="{{oauth_details.pictureUrl}}">
+                                    <img src="http://www.gravatar.com/avatar/{{oauth_details.emailAddress}}?s=32" />
+                                    <p class="lead">Review details below and confirm.</p>
+                                </div>
+                            </div>
+
+                                <div class="table-responsive" >
+                                    <table class="table table-condensed">
+                                        <tr><th>Field</th><th>Value</th></tr>
+                                                {% for key,val in oauth_data |cast_to_array %}
+                                            {% if (key=="emailAddress" or key=="lastName" or key=="firstName") %}
+                                            <tr>
+                                                <td >{{ key }}</td>
+                                                <td >{{ val }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endfor %}        
+                                    </table>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12 text-right">
+                                        <div>  
+                                            <button type="submit" name="btn_register" class="btn btn-success"  data-loading-text="Please wait..." >Register</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="collapse">
+                                    <label>Spiderbro: Don't change me bro, I'm tryin'a catch some flies!</label>
+                                    <input name="spiderbro" id="spiderbro" value="http://"/>
+                                </div>          
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
