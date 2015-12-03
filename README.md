@@ -46,7 +46,12 @@ with Key and Secret from LinkedIn Registered application
       http://your_uf_application.com/oauth/facebook/login
 # Register using Facebook 
     http://your_uf_application.com/oauth/facebook/register
-
+    
+## Add OAuth for Facebook to existing user 
+This plugin also provides a way to add OAuth token to a current user. 
+ - To do this login normally into UserFrosting application
+ - go to http://your_uf_application.com/oauth/facebook/settings
+    
 
 # For LinkedIn
 - Update the file UserFrosting-OAuth/controllers/OAuthControllerLinkedin.php 
@@ -56,16 +61,12 @@ with Key and Secret from LinkedIn Registered application
       http://your_uf_application.com/oauth/linkedin/login
 ## Register using LinkedIn 
     http://your_uf_application.com/oauth/linkedin/register
-
-
-The plugin also provides a way to add OAuth token to a current user. To do this login normally into UserFrosting application and 
-
-## Add OAuth for Facebook to existing user 
-    http://your_uf_application.com/oauth/facebook/settings
-    
 ## Add OAuth for LinkedIn to existing user 
-    http://your_uf_application.com/oauth/linkedin/settings
+This plugin also provides a way to add OAuth token to a current user. 
+ - To do this login normally into UserFrosting application
+ - go to http://your_uf_application.com/oauth/linkedin/settings
     
+
 # Having issues getting this to work ??
 
 if you have latest versions of league/oauth2-client which also needs guzzlehttp/guzzle (6.1.1) then you will have the right packages for this to work. 
