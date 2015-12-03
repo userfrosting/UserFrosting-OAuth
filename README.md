@@ -66,4 +66,19 @@ The plugin also provides a way to add OAuth token to a current user. To do this 
 ## Add OAuth for LinkedIn to existing user 
     http://your_uf_application.com/oauth/linkedin/settings
     
-    
+# Having issues getting this to work ??
+
+if you have latest versions of league/oauth2-client which also needs guzzlehttp/guzzle (6.1.1) then you will have the right packages for this to work. 
+One of my projects had a dependency for guzzle(<6.0) so it did not get the latest version of the league/oauth2-client and this plugin did not work there. 
+
+But i just installed UF with the 
+- league/oauth2-linkedin (0.4.0)
+- set the key and secret in the controller/OAuthControllerLinkedIn.php
+- setup the Linkedin app (developer.linkedin.com) to redirect to 
+     - http://yourapplicaiton.com/oauth/linkedin/login (Linked in Login)
+     - http://yourapplicaiton.com/oauth/linkedin/register (Register using LinkedIn)
+     - http://yourapplicaiton.com/oauth/linkedin/settings (Add LinkedIn login to existing user)
+
+the plugin uses all threeurls for 3 different use cases
+
+Please drop me a note if you have any questions
