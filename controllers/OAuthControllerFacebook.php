@@ -24,10 +24,12 @@ class OAuthControllerFacebook extends OAuthController {
 // TODO: these should be fetched from the site settings for this plugin (e.g. $app->site->get('oauth', 'client_id'); )
         $clientId = '<CLIENT ID>';
         $clientSecret = '<SECRET>';
+        $graphApiVersion = ""; // probably "v2.0"
 
         $this->_provider = new \League\OAuth2\Client\Provider\Facebook([
             'clientId' => $clientId,
             'clientSecret' => $clientSecret,
+            'graphApiVersion' => $graphApiVersion,
             'redirectUri' => $this->_app->site->uri['public'] . "/oauth/facebook/$callback_page"]);
 //        $this->_provider->fields = $oaFields;
     }
