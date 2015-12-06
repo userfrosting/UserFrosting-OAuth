@@ -20,13 +20,13 @@
         <div class="col-md-12">
             <p class="lead1">here is what we see in your profile!</p>
             <h3>{{oauth_details.name}}</h3>
-            <img src="{{oauth_details.pictureUrl}}">
+            <img src="{{oauth_details.picture_url}}">
             <img src="http://www.gravatar.com/avatar/{{oauth_details.emailAddress}}?s=32" />
         </div>
     </div>
     <p class="lead">Confirm your profile and we are good to go.</p>
     {% include 'components/common/alerts.twig' %}
-    <form name="register" method="post" action="{{site.uri.public}}/account/register" class="form-horizontal">
+    <form name="register" method="post" action="{{site.uri.public}}/oauth/{{provider_name|lower}}/register" class="form-horizontal">
         <div class="row">
             <div class="col-sm-12">
                 <div class="form-group">
@@ -48,7 +48,7 @@
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-fw fa-edit"></i></span>
                             <input type="text" class="form-control" name="display_name" autocomplete="off" 
-                                   value="{{ oauth_details.firstName~" " ~oauth_details.lastName }}" placeholder="Display name">
+                                   value="{{ oauth_details.first_name~" " ~oauth_details.last_name }}" placeholder="Display name">
                         </div>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-fw fa-envelope"></i></span>
                             <input type="text" class="form-control" name="email" placeholder="Email address" 
-                                   value="{{ oauth_details.emailAddress }}">
+                                   value="{{ oauth_details.email }}">
                         </div>
                     </div>
                 </div>

@@ -31,8 +31,8 @@
                         {% if checkAccess('update_account_setting', {('user'): user, ('property'): 'email'}) %}
                             <div class="row">
                                 <div class="col-md-12">
-                                    <h5>Hello {{ oauth_details.firstName~" " ~oauth_details.lastName }}</h5>
-                                    <img src="{{oauth_details.pictureUrl}}">
+                                    <h5>Hello {{ oauth_details.first_name~" " ~oauth_details.last_name }}</h5>
+                                    <img src="{{oauth_details.picture_url}}">
                                     <img src="http://www.gravatar.com/avatar/{{oauth_details.emailAddress}}?s=32" />
                                     <p class="lead">Review details below and confirm.</p>
                                 </div>
@@ -41,8 +41,8 @@
                                 <div class="table-responsive" >
                                     <table class="table table-condensed">
                                         <tr><th>Field</th><th>Value</th></tr>
-                                                {% for key,val in oauth_data |cast_to_array %}
-                                            {% if (key=="emailAddress" or key=="lastName" or key=="firstName") %}
+                                                {% for key,val in oauth_data %}
+                                            {% if (key=="email" or key=="last_name" or key=="first_name") %}
                                             <tr>
                                                 <td >{{ key }}</td>
                                                 <td >{{ val }}</td>

@@ -49,20 +49,44 @@ abstract class OAuthController extends \UserFrosting\BaseController {
 //logarr($user_details,"Line 49");        
 // Load the OAuthUser object for the given uid
         $oauth_user = OAuthUserLoader::fetch($user_details['id'], 'uid');
-//logarr($oauth_user,"Line 51");        
-// TODO: check that the user exists, and is not already logged in
-// Now get the UF user object and log the user in
-        if ($oauth_user !== false) {
-            
-//            $_SESSION["userfrosting"]["user"] = \UserFrosting\UserLoader::fetch($oauth_user->user_id);
-//            $this->_app->user = $_SESSION["userfrosting"]["user"];
-//            $this->_app->login($user);
+
+        // Get the alert message stream
+        $ms = $this->_app->alerts; 
+        
+		
+		
+		// Now get the UF user object and log the user in
+        if (isset($oauth_user->user_id)) {
             $var_ufuser = \UserFrosting\User::find($oauth_user->user_id);
+			// Forward the user to their default page if he/she is already logged in
+			if(!$this->_app->user->isGuest()) {
+				$ms->addMessageTranslated("warning", "LOGIN_ALREADY_COMPLETE");
+				$this->_app->redirect($this->_app->urlFor('uri_home'));
+				//$this->_app->halt(403);
+			}
+			
+			// Check that the user's account is enabled
+			if ($var_ufuser->flag_enabled == 0){
+				$ms->addMessageTranslated("danger", "ACCOUNT_DISABLED");
+				$this->_app->redirect($this->_app->urlFor('uri_home'));
+				//$this->_app->halt(403);
+			}        
+			
+			// Check that the user's account is activated
+			if ($var_ufuser->flag_verified == 0) {
+				$ms->addMessageTranslated("danger", "ACCOUNT_INACTIVE");
+				$this->_app->redirect($this->_app->urlFor('uri_home'));
+				//$this->_app->halt(403);
+			}
+            
+			//            $_SESSION["userfrosting"]["user"] = \UserFrosting\UserLoader::fetch($oauth_user->user_id);
+			//            $this->_app->user = $_SESSION["userfrosting"]["user"];
+			//            $this->_app->login($user);
             $this->_app->login($var_ufuser);       
             
- //           $this->_app->user->login();
+			//           $this->_app->user->login();
         } else {
-            $this->_app->alerts->addMessageTranslated("danger", "Your ".$this->_provider_name." Account is not connected to a local account. Plase register using LinkedIn first.", ["provider" => "LinkedIn"]);
+            $this->_app->alerts->addMessageTranslated("danger", "Your ".$this->_provider_name." Account is not connected to a local account. Plase register using ".$this->_provider_name." first.", ["provider" => $this->_provider_name]);
         }
         $this->_app->redirect($this->_app->urlFor('uri_home'));
     }
@@ -110,7 +134,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         switch ($action) {
             case "confirm":
                 $this->storeOAuth($_SESSION["userfrosting"]["user_id"]);
-                $this->_app->redirect('/account/settings');
+                $this->_app->redirect($this->_app->site->uri['public'] . "/account/settings");  
                 break;
         }
     }
@@ -119,7 +143,10 @@ abstract class OAuthController extends \UserFrosting\BaseController {
  * Register a user by authenticating via OAuth Provider.
  */    
     public function register() {
+
+		error_log('try ufRegister');
         $user = $this->ufRegister();
+		error_log('ufRegister done');
         $this->storeOAuth($user->id);
     }
 
@@ -129,7 +156,12 @@ abstract class OAuthController extends \UserFrosting\BaseController {
  */    
     public function pageRegister() {
         $user_details_obj = $this->authenticate();
-
+		//Test if this oauth provider's user is already associated with a user, log them in if so.
+		$provider_uid = isset($user_details_obj['uid']) ? $user_details_obj['uid'] : (isset($user_details_obj['id']) ? $user_details_obj['id'] : "");
+		if(OAuthUserLoader::exists($provider_uid, 'uid')){
+            $this->_app->alerts->addMessage("danger", "You are already registered.");
+			$this->_app->redirect($this->_app->site->uri['public'] . "/oauth/".strtolower($this->_provider_name)."/login"); //
+		}
         $schema = new \Fortress\RequestSchema($this->_app->config('schema.path') . "/forms/register.json");
         $this->_app->jsValidator->setSchema($schema);       
 
@@ -152,7 +184,8 @@ abstract class OAuthController extends \UserFrosting\BaseController {
             ],
             'captcha_image' => $this->generateCaptcha(),
             'validators' => $this->_app->jsValidator->rules(),
-            'oauth_details' => $user_details_obj
+            'oauth_details' => $this->transform($user_details_obj),
+			'provider_name' => $this->_provider_name
         ]);
     }
 
@@ -196,7 +229,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
                     'alerts' => $this->_app->alerts->getAndClearMessages()
                 ],
                 'oauth_details' => $this->_user_profile,
-                'oauth_data' => $user_details,
+                'oauth_data' => $this->transform($user_details),
                 'oauth_provider' => $this->_provider_name
             ]);
         }
@@ -235,10 +268,10 @@ abstract class OAuthController extends \UserFrosting\BaseController {
 
         $output_arr['uid'] = $oauth_arr['id'];
         $output_arr['oauth_details'] = serialize($oauth_arr);
-        $output_arr['first_name'] = $oauth_arr['firstName'];
-        $output_arr['last_name'] = $oauth_arr['lastName'];
-        $output_arr['email'] = $oauth_arr['emailAddress'];
-        $output_arr['picture_url'] = $oauth_arr['pictureUrl'];
+        $output_arr['first_name'] = isset($oauth_arr['firstName']) ? $oauth_arr['firstName'] : (isset($oauth_arr['first_name']) ? $oauth_arr['first_name'] : "");
+        $output_arr['last_name'] = isset($oauth_arr['lastName']) ? $oauth_arr['lastName'] : (isset($oauth_arr['last_name']) ? $oauth_arr['last_name'] : "");//$oauth_arr['lastName'];
+        $output_arr['email'] = isset($oauth_arr['emailAddress']) ? $oauth_arr['emailAddress'] : (isset($oauth_arr['email']) ? $oauth_arr['email'] : "");//$oauth_arr['emailAddress'];
+        $output_arr['picture_url'] = isset($oauth_arr['pictureUrl']) ? $oauth_arr['pictureUrl'] : (isset($oauth_arr['picture_url']) ? $oauth_arr['picture_url'] : "");//$oauth_arr['pictureUrl'];
 
         return $output_arr;
     }
@@ -270,7 +303,7 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $rf = new \Fortress\HTTPRequestFortress($ms, $requestSchema, $post);        
 
         // Security measure: do not allow registering new users until the master account has been created.        
-        if (!\UserFrosting\UserLoader::exists($this->_app->config('user_id_master'))){
+        if (!\UserFrosting\User::find($this->_app->config('user_id_master'))){
             $ms->addMessageTranslated("danger", "MASTER_ACCOUNT_NOT_EXISTS");
             $this->_app->halt(403);
         }
@@ -308,23 +341,21 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $rf->removeFields(['captcha', 'passwordc']);
         
         // Perform desired data transformations.  Is this a feature we could add to Fortress?
-        $data['user_name'] = strtolower(trim($data['user_name']));
         $data['display_name'] = trim($data['display_name']);
-        $data['email'] = strtolower(trim($data['email']));
         $data['locale'] = $this->_app->site->default_locale;
         
         if ($this->_app->site->require_activation)
-            $data['active'] = 0;
+            $data['flag_verified'] = 0;
         else
-            $data['active'] = 1;
+            $data['flag_verified'] = 1;
         
         // Check if username or email already exists
-        if (\UserFrosting\UserLoader::exists($data['user_name'], 'user_name')){
+        if (\UserFrosting\User::where('user_name', $data['user_name'])->first()){
             $ms->addMessageTranslated("danger", "ACCOUNT_USERNAME_IN_USE", $data);
             $error = true;
         }
 
-        if (\UserFrosting\UserLoader::exists($data['email'], 'email')){
+        if (\UserFrosting\User::where('email', $data['email'])->first()){
             $ms->addMessageTranslated("danger", "ACCOUNT_EMAIL_IN_USE", $data);
             $error = true;
         }
@@ -335,7 +366,15 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         }
     
         // Get default primary group (is_default = GROUP_DEFAULT_PRIMARY)
-        $primaryGroup = \UserFrosting\GroupLoader::fetch(GROUP_DEFAULT_PRIMARY, "is_default");
+        $primaryGroup = \UserFrosting\Group::where('is_default', GROUP_DEFAULT_PRIMARY)->first();
+        
+        // Check that a default primary group is actually set
+        if (!$primaryGroup){
+            $ms->addMessageTranslated("danger", "ACCOUNT_REGISTRATION_BROKEN");
+            error_log("Account registration is not working because a default primary group has not been set.");
+            $this->_app->halt(500);
+        }
+
         $data['primary_group_id'] = $primaryGroup->id;
         // Set default title for new users
         $data['title'] = $primaryGroup->new_user_title;
@@ -346,52 +385,43 @@ abstract class OAuthController extends \UserFrosting\BaseController {
         $user = new \UserFrosting\User($data);
 
         // Add user to default groups, including default primary group
-        $defaultGroups = \UserFrosting\GroupLoader::fetchAll(GROUP_DEFAULT, "is_default");
+        $defaultGroups = \UserFrosting\Group::where('is_default', GROUP_DEFAULT)->get();
         $user->addGroup($primaryGroup->id);
-        foreach ($defaultGroups as $group_id => $group)
-            $user->addGroup($group_id);    
+        foreach ($defaultGroups as $group)
+            $user->addGroup($group->id);    
+        
+        // Create sign-up event
+        $user->newEventSignUp();
         
         // Store new user to database
-        $user->store();
+        $user->save();
+        
         if ($this->_app->site->require_activation) {
-            // Create and send activation email
-
-            $mail = new \PHPMailer;
+            // Create verification request event
+            $user->newEventVerificationRequest();
+            $user->save();      // Re-save with verification event      
             
-            $mail->From = $this->_app->site->admin_email;
-            $mail->FromName = $this->_app->site->site_title;
-            $mail->addAddress($user->email);     // Add a recipient
-            $mail->addReplyTo($this->_app->site->admin_email, $this->_app->site->site_title);
-            
-            $mail->Subject = $this->_app->site->site_title . " - please activate your account";
-            $mail->Body    = $this->_app->view()->render("common/mail/activate-new.html", [
+            // Create and send verification email
+            $twig = $this->_app->view()->getEnvironment();
+            $template = $twig->loadTemplate("mail/activate-new.twig");        
+            $notification = new \UserFrosting\Notification($template);
+            $notification->fromWebsite();      // Automatically sets sender and reply-to
+            $notification->addEmailRecipient($user->email, $user->display_name, [
                 "user" => $user
             ]);
             
-            $mail->isHTML(true);                                  // Set email format to HTML
-            
-            if(!$mail->send()) {
+            try {
+                $notification->send();
+            } catch (\phpmailerException $e){
                 $ms->addMessageTranslated("danger", "MAIL_ERROR");
-                error_log('Mailer Error: ' . $mail->ErrorInfo);
-/**
- *
- *  Srinivas : Should we be halting the registraiton process if the email could not be sent out
- * CAn we just give a message that a confirmation could not be sent out, contact the site admin
- * Because at this point the user record is already created. And the user should be able to login
- * Halting it here, does not let the process proceed with the OpenAuthentication, so now the user is stuck
- * with just UF account and does not have a link to the Open Authentication. 
- * Would be good to exit with a warning
- */                
-//                 
-//                $this->_app->halt(500);
+                error_log('Mailer Error: ' . $e->errorMessage());
+                //$this->_app->halt(500);
             }
-
-            // Activation required
+            
             $ms->addMessageTranslated("success", "ACCOUNT_REGISTRATION_COMPLETE_TYPE2");
         } else
             // No activation required
             $ms->addMessageTranslated("success", "ACCOUNT_REGISTRATION_COMPLETE_TYPE1");
-
 // Srinivas : The OAuth function will need the user object, so that it can get the ID to save the OAuth record
 // Invoking this in OAuth to register using         
         return $user;

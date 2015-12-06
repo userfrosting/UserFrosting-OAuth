@@ -13,7 +13,7 @@ namespace UserFrosting\OAuth;
  * @see http://www.userfrosting.com/tutorials/lesson-3-data-model/
  * @deprecated deprecated since version 0.3.1
  */
-class OAuthUserLoader { 
+class OAuthUserLoader extends OAuthController { 
     
     /**
      * Determine if a user exists based on the value of a given column.
@@ -22,6 +22,7 @@ class OAuthUserLoader {
      * @param string $name The name of the column to match (defaults to id)
      * @return bool  Returns true if a match is found, false otherwise.
      */
+
     public static function exists($value, $name = "id"){
         if ($name == "id")
             // Fetch by id

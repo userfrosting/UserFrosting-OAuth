@@ -35,11 +35,11 @@ function getProviderController($provider, $callback_page, $app) {
     switch ($provider) {
         case "linkedin" :
             require_once('controllers/OAuthControllerLinkedIn.php');
-            return new \UserFrosting\OAuth\OAuthControllerLinkedIn($app, $callback_page);
+            return new OAuthControllerLinkedIn($app, $callback_page);
             break;
         case "facebook" :
             require_once('controllers/OAuthControllerFacebook.php');
-            return new \UserFrosting\OAuth\OAuthControllerFacebook($app, $callback_page);
+            return new OAuthControllerFacebook($app, $callback_page);
             break;
         default:
 //            return false;
@@ -56,7 +56,6 @@ $twig->addFilter(new \Twig_SimpleFilter('cast_to_array', function ($stdClassObje
     foreach ((array) $stdClassObject as $key => $value) {
         $response[str_replace('*', '', $key)] = $value;
     }
-//print_r($response);    
     return $response;
 }));
 
@@ -64,7 +63,7 @@ $loader = $twig->getLoader();
 // First look in user's theme...
 $loader->addPath($app->config('plugins.path') . "/UserFrosting-OAuth/templates");
 
-$table_user_oauth = new \UserFrosting\DatabaseTable($app->config('db')['db_prefix'] . "user_oauth", [
+$table_user_oauth = new UF\DatabaseTable($app->config('db')['db_prefix'] . "user_oauth", [
     "provider",
     "user_id",
     "uid",
@@ -75,10 +74,7 @@ $table_user_oauth = new \UserFrosting\DatabaseTable($app->config('db')['db_prefi
     "oauth_details",
     "created_at"]);
 
-// Innitialize the OAuth User Loader the table and column definitions will be loaded
-//\UserFrosting\Database::setSchemaTable("staff_event_user", $table_staff_event_user);
-//OAuthUserLoader::init($table_user_oauth);
-\UserFrosting\Database::setSchemaTable("user_oauth", $table_user_oauth);
+UF\Database::setSchemaTable("user_oauth", $table_user_oauth);
 
 // Define routes
 // This is the GET route for the "login with ___" button
