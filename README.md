@@ -1,4 +1,4 @@
-# Works with Userfrosting v 3.x 
+# Works with UserFrosting v 3.x 
 This plugin does not work with UF 4.x. This will be built as a UF feature in near future.
 
 # UserFrosting-OAuth v0.1
